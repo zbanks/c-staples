@@ -1,0 +1,37 @@
+#ifndef CFGOBJ 
+#error "CFGOBJ not defined in config_gen.h"
+#endif
+
+#include <string.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "config_macros.h"
+
+#ifdef SECTIONSTRUCT 
+#undef SECTIONSTRUCT
+#endif 
+#define SECTIONSTRUCT(x) CONCAT(_##x##_,CFGOBJ)
+
+struct CFGOBJ {
+    #define CFGSECTION(w, d) struct SECTIONSTRUCT(w) { d } w;
+    #define CFGSECTION_LIST(w, max, d) struct SECTIONSTRUCT(w) { int configured; d } LIST_NAME(w)[max]; int LIST_N_NAME(w);
+    #define CFG(n, type, default) type n;
+    #define CFG_LIST(name, max, type) struct { int index; type name; } LIST_NAME(name)[max]; int LIST_N_NAME(name);
+    #include CFGOBJ_PATH
+};
+
+int CONCAT(CFGOBJ, _dump)(struct CFGOBJ * cfg, const char * filename);
+int CONCAT(CFGOBJ, _load)(struct CFGOBJ * cfg, const char * filename);
+int CONCAT(CFGOBJ, _init)(struct CFGOBJ * cfg);
+int CONCAT(CFGOBJ, _del)(struct CFGOBJ * cfg);
+
+#ifndef __MYSTRDUMP__
+#define __MYSTRDUMP__
+inline static char* mystrdup(const char* s) {
+    char* p = malloc(strlen(s)+1);
+    if (p) strcpy(p, s);
+    return p;
+}
+#endif
+
